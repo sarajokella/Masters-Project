@@ -12,6 +12,7 @@ import numpy as np
 import ROOT
 from formula import Cpipi, Spipi, Ckk, Skk
 from Covariance import Covinv
+from error import errors
 import re
 
 def fcn(npar, grad, retVal, par, flag):
@@ -29,9 +30,11 @@ def fcn(npar, grad, retVal, par, flag):
     d = par[0]
     theta = par[1]
     gamma = par[2]
+    betas = par[3]
+    lambdaCKM = par[4]
     dprimetilde = d*((1-lambdaCKM*lambdaCKM)/(lambdaCKM*lambdaCKM))
 
-    v = [(Cpi-Cpipi(d,theta,gamma)), (Spi-Spipi(d,theta,gamma,beta)), (Ck-Ckk(dprimetilde,theta,gamma)), (Sk-Skk(dprimetilde,theta,gamma,betas)), betas]
+    v = [(Cpi-Cpipi(d,theta,gamma)), (Spi-Spipi(d,theta,gamma,beta)), (Ck-Ckk(dprimetilde,theta,gamma)), (Sk-Skk(dprimetilde,theta,gamma,betas)), betas, lambdaCKM]
 
     chi2sum = np.dot(np.dot(np.transpose(v),Cinv),v)
     retVal[0] = chi2sum
@@ -57,6 +60,7 @@ minuit.mnparm(0, "d", 0.3, 0.1, 0.0, 0.5, errfl)
 minuit.mnparm(1, "theta", 90*rad, 0.1, 0, 1. * math.pi, errfl)
 minuit.mnparm(2, "gamma", 1.134, 0.1, 0, 1. * math.pi, errfl)
 minuit.mnparm(3, "betas", 0.018*rad, 0.01, 0, 0.01 * math.pi, errfl)
+minuit.mnparm(4, "lambdaCKM", 0.2, 0.01, 0.0001, 0.5, errfl)
 
 # define the measurements and their errors - this may be a length, or multiple
 # measurements of a resistance, or ...
@@ -71,7 +75,7 @@ elambda = 0.00025
 
 beta = 22.5*rad
 ebeta = 0.55*rad
-betas = 0.01843*rad
+#betas = 0.01843*rad
 ebetas = 0.00048*rad
 
 c = scipy.array([[1,0.448,-0.006,-0.009], [0.448,1,-0.04,-0.006], [-0.006,-0.040,1,-0.014], [-0.009,-0.006,-0.014,1]])
@@ -79,16 +83,8 @@ sys = scipy.array([0.06,0.05,0.06,0.06])
 
 #add betas error to covariance matrix
 Cinv = Covinv(4,c,sys)
-f = Cinv.tolist()
-
-for i in range(0,4):
-	f[i].append(0)
-	f[i].append(0)
-f = np.asarray(f)
-Cinv = np.vstack([f, np.zeros(6)])
-Cinv = np.vstack([Cinv, np.zeros(6)])
-Cinv[4][4] = ebetas**2
-Cinv[5][5] = elambda**2
+errorlist = [ebetas,elambda]
+Cinv = errors(4,Cinv,2,errorlist)
 
 print Cinv
 
@@ -102,7 +98,7 @@ minuit.Command("MINOS 10000 0.001")
 
 minuit.SetPrintLevel(0)
 
-def Contours(par1, par2, yaxis, xaxis):
+"""def Contours(par1, par2, yaxis, xaxis):
 	c1 = ROOT.TCanvas()
 	minuit.SetErrorDef(2*2)
 	cont = minuit.Contour(150, par1, par2)
@@ -133,4 +129,4 @@ def Contours(par1, par2, yaxis, xaxis):
 
 Contours(1, 0, "d", "#theta")
 Contours(2, 0, "d", "#gamma")
-Contours(2, 1, "#theta", "#gamma")
+Contours(2, 1, "#theta", "#gamma")"""
