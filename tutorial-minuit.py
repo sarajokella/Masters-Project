@@ -58,11 +58,14 @@ errs = [0.01, 0.01, 0.1, 1.0]
 
 # covariances are errors squared
 covs = [e * e for e in errs]
+print covs
 
 # and we'll need the inverse of the covariance
 icovs = []
 for cov in covs:
     icovs.append(1. / cov)
+
+print icovs
 
 # give MINUIT the function to minimise
 minuit.SetFCN(fcn)
