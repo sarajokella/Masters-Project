@@ -40,7 +40,7 @@ def fcn(npar, grad, retVal, par, flag):
     retVal[0] = chi2sum
 
 # create a minimiser for 1 parameter
-minuit = ROOT.TMinuit(1)
+minuit = ROOT.TMinuit(3)
 minuit.Command("SET PRINTOUT 1")  # tell it to be verbose...minuit.Command("SET WARNINGS")    # and to emit warnings...
 minuit.Command("SET STRATEGY 2")  # and to spend time to get good errors...
 
@@ -56,10 +56,10 @@ rad = math.pi/180
 errfl = ctypes.c_int(0)
 
 # param. nr., name, init. value, init. step size, low bound, high bound
-minuit.mnparm(0, "d", 0.3, 0.1, 0.0, 0.5, errfl)
+minuit.mnparm(0, "d", 0.3, 0.1, 0, 0.9, errfl)
 minuit.mnparm(1, "theta", 90*rad, 0.1, 0, 1. * math.pi, errfl)
 minuit.mnparm(2, "gamma", 1.134, 0.1, 0, 1. * math.pi, errfl)
-minuit.mnparm(3, "betas", 0.018*rad, 0.01, 0, 0.01 * math.pi, errfl)
+minuit.mnparm(3, "betas", 0.0184, 0.01, 0, 0.01 * math.pi, errfl)
 minuit.mnparm(4, "lambdaCKM", 0.2, 0.01, 0.0001, 0.5, errfl)
 
 # define the measurements and their errors - this may be a length, or multiple
@@ -70,13 +70,13 @@ Ck = 0.20
 Sk = 0.18
 Ak = -0.79
 
-lambdaCKM = 0.2247
+#lambdaCKM = 0.2247
 elambda = 0.00025
 
 beta = 22.5*rad
 ebeta = 0.55*rad
 #betas = 0.01843*rad
-ebetas = 0.00048*rad
+ebetas = 0.00048
 
 c = scipy.array([[1,0.448,-0.006,-0.009], [0.448,1,-0.04,-0.006], [-0.006,-0.040,1,-0.014], [-0.009,-0.006,-0.014,1]])
 sys = scipy.array([0.06,0.05,0.06,0.06])
@@ -85,8 +85,6 @@ sys = scipy.array([0.06,0.05,0.06,0.06])
 Cinv = Covinv(4,c,sys)
 errorlist = [ebetas,elambda]
 Cinv = errors(4,Cinv,2,errorlist)
-
-print Cinv
 
 # give MINUIT the function to minimise
 minuit.SetFCN(fcn)
@@ -98,9 +96,12 @@ minuit.Command("MINOS 10000 0.001")
 
 minuit.SetPrintLevel(0)
 
-"""def Contours(par1, par2, yaxis, xaxis):
+def Contours(par1, par2, yaxis, xaxis, fix1, fix2, fix3):
 	c1 = ROOT.TCanvas()
 	minuit.SetErrorDef(2*2)
+	minuit.FixParameter(fix1)
+	minuit.FixParameter(fix2)
+	minuit.FixParameter(fix3)
 	cont = minuit.Contour(150, par1, par2)
 	cont.SetLineColor(ROOT.kBlue)
 	cont.GetYaxis().SetTitle(yaxis)
@@ -121,12 +122,14 @@ minuit.SetPrintLevel(0)
 	name = yaxis + "_" + xaxis + "_graph3.pdf"
 
 	if re.search("#", name) != None:
-		name = name.replace("#", "") 
+		name = name.replace("#", "")
 		c1.Print(name)
 
 	else:
 		c1.Print(name)
+	minuit.mnfree(0)
 
-Contours(1, 0, "d", "#theta")
-Contours(2, 0, "d", "#gamma")
-Contours(2, 1, "#theta", "#gamma")"""
+Contours(1, 0, "d", "#theta", 2, 3, 4)
+Contours(2, 0, "d", "#gamma", 1, 3, 4)
+Contours(2, 1, "#theta", "#gamma", 0, 3, 4)
+#Contours(3, 4, "#beta", "#lambda")
